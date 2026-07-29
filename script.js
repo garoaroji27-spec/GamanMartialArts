@@ -59,7 +59,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (carousel) {
     updateActiveSlide();
-    carousel.addEventListener("scroll", () => window.requestAnimationFrame(updateActiveSlide));
+    let carouselFrame = null;
+    carousel.addEventListener("scroll", () => {
+      if (carouselFrame) cancelAnimationFrame(carouselFrame);
+      carouselFrame = requestAnimationFrame(() => {
+        updateActiveSlide();
+        carouselFrame = null;
+      });
+    });
   }
 
   const revealItems = document.querySelectorAll(".category-title, .product-card, .footer-brand, .footer-column");
@@ -138,13 +145,25 @@ function moveSlide(direction) {
   const carousel = document.getElementById("carouselWrapper");
   if (!carousel) return;
 
-  const slide = carousel.querySelector(".hero-slide");
-  if (!slide) return;
+  const slides = Array.from(carousel.querySelectorAll(".hero-slide"));
+  if (!slides.length) return;
 
-  carousel.scrollBy({
-    left: direction * (slide.offsetWidth + 28),
-    behavior: "smooth"
+  const center = carousel.scrollLeft + carousel.clientWidth / 2;
+  let currentIndex = 0;
+  let minDistance = Infinity;
+
+  slides.forEach((slide, index) => {
+    const slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
+    const distance = Math.abs(center - slideCenter);
+    if (distance < minDistance) {
+      minDistance = distance;
+      currentIndex = index;
+    }
   });
 
-  setTimeout(updateActiveSlide, 420);
+  const targetIndex = Math.max(0, Math.min(slides.length - 1, currentIndex + direction));
+  const target = slides[targetIndex];
+  const left = target.offsetLeft - (carousel.clientWidth - target.offsetWidth) / 2;
+
+  carousel.scrollTo({ left, behavior: "smooth" });
 }
