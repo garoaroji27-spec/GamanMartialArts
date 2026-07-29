@@ -1648,3 +1648,68 @@ main {
     transform: scale(1) rotateY(0deg) !important;
   }
 }
+
+
+/* =========================================================
+   CORRECCIÓN DEFINITIVA: TÍTULOS ROPA + MODAL SIN PARPADEO
+========================================================= */
+
+/* Misma letra, grosor y altura visual en ordenador y móvil */
+.category-title h1 {
+  font-family: "Arial Black", Arial, sans-serif !important;
+  font-weight: 900 !important;
+  font-style: normal !important;
+  line-height: .95 !important;
+  letter-spacing: -2px !important;
+  margin: 0 0 16px !important;
+  transform: none !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+/* El modal no muestra una imagen anterior ni una imagen a medio cargar */
+.product-modal-content img,
+.combat-modal-content img {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: none !important;
+}
+
+.product-modal-content img.is-ready,
+.combat-modal-content img.is-ready {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Se elimina el pequeño cambio de escala al abrir */
+.product-modal-content,
+.combat-modal-content,
+.product-modal.is-open .product-modal-content,
+.combat-modal.is-open .combat-modal-content {
+  transform: none !important;
+  transition: none !important;
+}
+
+@media (max-width: 768px) {
+  .category-title {
+    padding-top: 90px !important;
+    padding-bottom: 42px !important;
+  }
+
+  .category-title h1 {
+    font-family: "Arial Black", Arial, sans-serif !important;
+    font-size: clamp(38px, 11vw, 58px) !important;
+    font-weight: 900 !important;
+    line-height: .95 !important;
+    letter-spacing: -2px !important;
+    margin: 0 0 16px !important;
+  }
+
+  /* En móviles táctiles no se aplica el zoom de hover de las fotos */
+  .product-modal-card:hover .product-image-btn img,
+  .product-modal-card:hover .product-image-btn.sudadera-preview img,
+  .product-card:hover img {
+    transform: none !important;
+    filter: none !important;
+  }
+}

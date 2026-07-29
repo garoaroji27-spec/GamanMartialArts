@@ -92,22 +92,73 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function closeProductModal() {
     if (!productModal) return;
+    modalRequestId++;
     productModal.classList.remove("is-open");
     productModal.setAttribute("aria-hidden", "true");
+    if (productModalImage) productModalImage.classList.remove("is-ready");
     document.body.style.overflow = "";
   }
 
+  // Precarga las imágenes ampliadas para evitar el parpadeo al abrirlas.
+  const modalImageCache = new Map();
+
   productImageButtons.forEach(button => {
-    button.addEventListener("click", () => {
+    const fullImage = button.dataset.full;
+    if (!fullImage || modalImageCache.has(fullImage)) return;
+
+    const preloadImage = new Image();
+    preloadImage.decoding = "async";
+    preloadImage.src = fullImage;
+    modalImageCache.set(fullImage, preloadImage);
+  });
+
+  let modalRequestId = 0;
+
+  productImageButtons.forEach(button => {
+    button.addEventListener("click", async () => {
       if (!productModal || !productModalImage || !productModalTitle) return;
+
       const fullImage = button.dataset.full;
       const title = button.dataset.title || "Producto GAMAN";
+      if (!fullImage) return;
+
+      const requestId = ++modalRequestId;
+      const loadedImage = modalImageCache.get(fullImage) || new Image();
+      loadedImage.decoding = "async";
+
+      if (!loadedImage.src) {
+        loadedImage.src = fullImage;
+        modalImageCache.set(fullImage, loadedImage);
+      }
+
+      try {
+        if (!loadedImage.complete || loadedImage.naturalWidth === 0) {
+          await new Promise((resolve, reject) => {
+            loadedImage.addEventListener("load", resolve, { once: true });
+            loadedImage.addEventListener("error", reject, { once: true });
+          });
+        }
+
+        if (typeof loadedImage.decode === "function") {
+          await loadedImage.decode().catch(() => {});
+        }
+      } catch (error) {
+        return;
+      }
+
+      if (requestId !== modalRequestId) return;
+
+      productModalImage.classList.remove("is-ready");
       productModalImage.src = fullImage;
       productModalImage.alt = title;
       productModalTitle.textContent = title;
-      productModal.classList.add("is-open");
-      productModal.setAttribute("aria-hidden", "false");
-      document.body.style.overflow = "hidden";
+
+      requestAnimationFrame(() => {
+        productModalImage.classList.add("is-ready");
+        productModal.classList.add("is-open");
+        productModal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      });
     });
   });
 
